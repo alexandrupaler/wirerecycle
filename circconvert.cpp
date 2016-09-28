@@ -128,7 +128,7 @@ void circconvert::replaceNonICM()
 				gates.insert(it, c);
 			}
 
-			gates.erase(it);
+			it = gates.erase(it);
 			it--;
 		}
 		else if(it->type == 'h')
@@ -147,7 +147,7 @@ void circconvert::replaceNonICM()
 			}
 
 			//delete the old gate
-			gates.erase(it);//advances the iterator
+			it = gates.erase(it);//advances the iterator
 			it--;
 		}
 	}
@@ -201,7 +201,7 @@ void circconvert::replaceICM()
 
 			gates.insert(it, gate);
 
-			gates.erase(it);
+			it = gates.erase(it);
 			it--;
 		}
 		else if(it->type == 'v')
@@ -227,7 +227,7 @@ void circconvert::replaceICM()
 
 			gates.insert(it, gate);
 
-			gates.erase(it);
+			it = gates.erase(it);
 			it--;
 		}
 		else if(it->type == 't')
@@ -255,7 +255,7 @@ void circconvert::replaceICM()
 				gates.insert(it, gate);
 			}
 
-			gates.erase(it);
+			it = gates.erase(it);
 			it--;
 		}
 	}

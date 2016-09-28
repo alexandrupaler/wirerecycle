@@ -6,7 +6,7 @@ INCLUDES = headers
 CFLAGS = -I$(INCLUDES) -lm -g #-m32 #-O3
 CXXFLAGS = $(CFLAGS) 
 
-FILES = gatenumbers.cpp cnotcounter.cpp circuitmatrix.cpp cuccaro.cpp trim.cpp causalgraph.cpp circconvert.cpp recyclegate.cpp recycle.cpp fileformats/test.cpp
+FILES = gatenumbers.cpp cnotcounter.cpp circuitmatrix.cpp cuccaro.cpp trim.cpp causalgraph.cpp circconvert.cpp recyclegate.cpp recycle.cpp
 OBJS = $(patsubst %.cpp, $(OBJDIR)/%.o, $(FILES))
 
 $(OBJDIR)/%.o: %.cpp

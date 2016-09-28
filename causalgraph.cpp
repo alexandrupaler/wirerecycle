@@ -91,12 +91,6 @@ void causalgraph::connectNodes(int previd, int currid)
 {
 	circuit[previd].addWillPush(currid);
 	circuit[currid].addPushedBy(previd);
-
-	//ia maximul de la vecinii care imping
-//	int maxPrevLevel = getMaxPrevLevel(currid);
-//
-//	//actualizeaza level la nodul curent
-//	circuit[currid].level = maxPrevLevel + 1;
 }
 
 void causalgraph::updateLabels()
@@ -180,20 +174,6 @@ void causalgraph::replaceQubitIndex(set<int>& visited, int curr, int oldvalue, i
 	}
 }
 
-//void causalgraph::updateBackwardHierarchy(set<int>& visited, int curr, int distance)
-//{
-//	if(visited.find(curr) != visited.end())
-//	return;
-//
-//	visited.insert(curr);
-//	circuit[curr].level += distance;
-//	for(set<int>::iterator it=circuit[curr].pushedBy.begin(); it!=circuit[curr].pushedBy.end(); it++)
-//	{
-//		//if(circuit[curr].level - circuit[*it].level != 1)
-//			updateBackwardHierarchy(visited, *it, distance);
-//	}
-//}
-
 void causalgraph::findShortestPath(set<int>& visited, set<int>& outputs, vector<int> path, vector<int>& shortest, int stepback, int prev, int curr)
 {
 	if(visited.find(curr) != visited.end())
@@ -204,40 +184,26 @@ void causalgraph::findShortestPath(set<int>& visited, set<int>& outputs, vector<
 	if(visited.empty())
 	{
 		set<int> vis2;
-		//set<int> outputs;
 		reachOutputs(vis2, outputs, curr);
-		//pentru a evita cicluri cu outputuri
+		//avoid cycles of outputs
 		visited.insert(outputs.begin(), outputs.end());
 	}
-
-	//printf("%d.%d ", curr, stepback);
-	//circuit[curr].print();
 
 	visited.insert(curr);
 
 	//do not consider nodes where output and input were joined
-	if(gatenumbers::getInstance()->isConnectionElement(circuit[curr].type))
-		//path.insert(curr);
+	if(!gatenumbers::getInstance()->isConnectionElement(circuit[curr].type))
 		path.push_back(curr);
 
 	//check solution
-	//mai bine ar fi pe linia cea mai apropiata
-	//e inutila conditia cu stepback?
-	if(stepback>0 &&  gatenumbers::getInstance()->isAncillaOutput(circuit[curr].type) /*circuit[curr].type == -2*/ && outputs.find(curr) == outputs.end())//todo
+	if(stepback>0 &&  gatenumbers::getInstance()->isAncillaOutput(circuit[curr].type) && outputs.find(curr) == outputs.end())//todo
 	{
-		//int dist = path.size() - 2*stepback;
-
-		//printf("found solution");
-		//if (shortest.size() == 0 || (path.size() <= shortest.size()-1 && stepback< -shortest.back() ))
-
 		//int distwire = circuit[path.back()].wires[0] - circuit[path.front()].wires[0];
 
-		/*METODA CU STEPBACK*/
-		if (shortest.size() == 0 || (path.size() < shortest.size()-1 || stepback< -shortest.back() ))
-		//int distzero = abs(path.size() - stepback);
-		//if (shortest.size() == 0 || (distzero <= -shortest.back() ))
+		/*METHOD STEPBACK*/
+		if (shortest.size() == 0 || (path.size() < shortest.size()-1 || stepback < -shortest.back() ))
 
-		/*METODA CU DISTWIRE*/
+		/*METHD DISTWIRE*/
 		//if (shortest.size() == 0 || (/*path.size() <= shortest.size()-1 || */abs(distwire)<= abs(-shortest.back()) ))
 		{
 			shortest.clear();
@@ -253,25 +219,20 @@ void causalgraph::findShortestPath(set<int>& visited, set<int>& outputs, vector<
 			/*METODA CU DISTWIRE*/
 			//shortest.push_back(-distwire);
 
-			//printf("# %d %d\n", path.size(), distwire);
 		}
 	}
 
-	//BACKWARD
-	//if(/*shortest.size() == 0 && */circuit[curr].type > 0)
+	for(set<int>::iterator it=circuit[curr].pushedBy.begin(); it!=circuit[curr].pushedBy.end(); it++)
 	{
-		for(set<int>::iterator it=circuit[curr].pushedBy.begin(); it!=circuit[curr].pushedBy.end(); it++)
+		if(*it != prev)
 		{
-			if(*it != prev)
-			{
-				//fa pas inapoi
-				//findShortestPath(visited, shortest, true, curr, *it);
-				int counts = 1;
-				//if(circuit[*it].type == -3 || circuit[*it].type == -4)
-				if(gatenumbers::getInstance()->isConnectionElement(circuit[*it].type))
-					counts = 0;
-				findShortestPath(visited, outputs, path, shortest, stepback + counts, curr, *it);
-			}
+			//fa pas inapoi
+			//findShortestPath(visited, shortest, true, curr, *it);
+			int counts = 1;
+			//if(circuit[*it].type == -3 || circuit[*it].type == -4)
+			if(gatenumbers::getInstance()->isConnectionElement(circuit[*it].type))
+				counts = 0;
+			findShortestPath(visited, outputs, path, shortest, stepback + counts, curr, *it);
 		}
 	}
 
@@ -287,19 +248,20 @@ int causalgraph::moveInputAfterOutput(vector<int> shortest, int inputId)
 {
 	int outputId = -1;
 
-	//o cautare iditoata - ar trebui sa fie ultimul element
-	for (vector<int>::iterator it = shortest.begin(); it != shortest.end(); it++)
+	/*the last element is just the number of stepbacks*/
+	for (vector<int>::iterator it = shortest.begin(); it != (shortest.end()--); it++)
 	{
 		//if (circuit[*it].type == -2)
-		if (gatenumbers::getInstance()->isAncillaOutput(circuit[*it].type))
+
+		gatenumbers* gn = gatenumbers::getInstance();
+		int x = circuit[*it].type;
+		if (gn->isAncillaOutput(x))
 		{
 			outputId = *it;
 
 			//change type to not reconnect another input
 			circuit[outputId].type = CONNOUT;//temp value, todo
 			circuit[inputId].type = CONNIN;
-
-//			printf("from %s to %s\n", circuit[inputId].label.c_str(), circuit[outputId].label.c_str());
 
 			connectNodes(outputId, inputId);
 
@@ -352,7 +314,6 @@ void causalgraph::reachOutputs(set<int>& visited, set<int>& outputs, int curr)
 
 	visited.insert(curr);
 
-	//if(circuit[curr].type == type)
 	if(gatenumbers::getInstance()->isAncillaOutput(circuit[curr].type))
 	{
 		outputs.insert(curr);

@@ -211,7 +211,8 @@ int recycleUsingWireSequence()
 			continue;
 		}
 
-		int outputId = chooseClosestAncillaOutputWire(inputId, PREFERLOWNUMBEREDWIRES);
+		//int outputId = chooseClosestAncillaOutputWire(inputId, PREFERLOWNUMBEREDWIRES);
+		int outputId = chooseClosestAncillaOutputWire(inputId, PREFERANYWIRE);
 		if(outputId != -1)
 		{
 			nrConnect++;
@@ -259,11 +260,10 @@ int recycleUsingSearch()
 
 		set<int> visited;
 		vector<int> path;
-		//set<int> outputs;
 		vector<int> shortest;
 		causal.findShortestPath(visited, perInputReachedOutputs[inputId], path, shortest, false, -1, inputId);
 
-		if(shortest.size() > 0)
+		if(shortest.size() > 1)
 		{
 			nrConnect++;
 			//printf("The results...\n");
@@ -271,7 +271,7 @@ int recycleUsingSearch()
 
 			updateSimQueue(outputId, perInputReachedOutputs[inputId]);
 
-			outputGraph(nrConnect);
+			//outputGraph(nrConnect);
 		}
 
 		perInputReachedOutputs.erase(inputId);
@@ -416,8 +416,11 @@ int main(int argc, char** argv)
 	vector<vector<int> > remainingIns = extractSortedInputsList();
 	renameWires (remainingIns);
 
-	circuitmatrix circ  = createCircuitMatrix(remainingIns);
-	circ.printCirc();
+	//circuitmatrix circ  = createCircuitMatrix(remainingIns);
+	//circ.printCirc();
+
+	//the results line
+	printf("%d %d %d\n", causal.nrQubits, causal.inAncillae.size(), nrConnect);
 
 	return 1;
 }
